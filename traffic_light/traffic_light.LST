@@ -1,0 +1,265 @@
+C51 COMPILER V9.00   TRAFFIC_LIGHT                                                         01/10/2018 09:28:52 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE TRAFFIC_LIGHT
+OBJECT MODULE PLACED IN traffic_light.OBJ
+COMPILER INVOKED BY: D:\Apps\Keil_v4\C51\BIN\C51.EXE traffic_light.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include"STC15F2K60S2.h "
+   2          
+   3          #define uint unsigned int
+   4          #define uchar unsigned char
+   5          
+   6          sbit Dyellow=P0^0;
+   7          sbit Dgreen=P0^1;
+   8          sbit Dred=P0^2;
+   9          sbit Xyellow=P0^3;
+  10          sbit Xgreen=P0^4;
+  11          sbit Xred=P2^3;
+  12          sbit Nyellow=P1^0;
+  13          sbit Ngreen=P1^1;
+  14          sbit Nred=P1^2;
+  15          sbit Byellow=P1^3;
+  16          sbit Bgreen=P1^4;
+  17          sbit Bred=P1^5;
+  18          sbit Rred=P0^5;
+  19          sbit Rgreen=P0^6;
+  20          
+  21          sbit Kid=P0^7;//儿童提示灯
+  22          sbit J=P3^3;//紧急按钮
+  23          
+  24          uint num1,num2, num3,num4;  //    东   西    南   北
+  25          uint w,d,ge1,shi1,ge2,shi2, ge3,shi3, ge4,shi4;
+  26                                                                  
+  27          /*****************************配置数码管*****************************/
+  28          sbit    P_HC595_OE    = P3^7;   //pin 13    OE      out enabled
+  29          sbit    P_HC595_SER   = P4^5;   //pin 14        SER             data input
+  30          sbit    P_HC595_RCLK  = P4^4;   //pin 12        RCLk    store (latch) clock
+  31          sbit    P_HC595_SRCLK = P4^2;   //pin 11        SRCLK   Shift data clock
+  32          
+  33          
+  34          unsigned char code tableduan[]={
+  35          // 0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
+  36                  0x3F,0x06,0x5B,0x4F,0x66,0x6D,0x7D,0x07,0x7F,0x6F,0x77,0x7C,0x39,0x5E,0x79,0x71   
+  37          };        // 段码
+  38          unsigned char code tablewei[]={
+  39                  //1    2    3    4    5    6   7    8  
+  40                  0xfe,0xfd,0xfb,0xf7,0xef,0xdf,0xbf,0x7f                                        
+  41          };         //位码
+  42          
+  43          /*****************************配置数码管完成****************/
+  44          void delay(uint z)        //延时          原本delay(8000)输出大概1s
+  45          {
+  46   1              uint x,y;
+  47   1              for(x=z;x>0;x--)
+  48   1                      //for(y=110;y>0;y--);
+  49   1                      for(y=800;y>0;y--);
+  50   1      }
+  51          void Send_595(unsigned char dat);
+  52          void DisplayScan(unsigned char num,wei);
+  53          void xianshi();           //显示
+  54          void zhengchang();        //正常
+  55          /***************************主函数******************************/
+C51 COMPILER V9.00   TRAFFIC_LIGHT                                                         01/10/2018 09:28:52 PAGE 2   
+
+  56          /*void main()
+  57          {
+  58                  while(1)
+  59                  {
+  60                          uchar i ; 
+  61                           num1=88;num2=77;num3=66;num4=55;
+  62                          for(i=38;i>0;i--){
+  63                          ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
+  64                   ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
+  65                           xianshi();     
+  66                           num1--;num2--; num3--;num4--;
+  67                           }
+  68                  }
+  69                  
+  70          } */
+  71          void main()
+  72          {
+  73   1              while(1)
+  74   1              {
+  75   2                      if(J==0){
+  76   3                              Nred=0;Dred=0; Bred=0; Xred=0; Kid=0;delay(10000);}
+  77   2                  else{
+  78   3                              zhengchang();}
+  79   2              }
+  80   1      }
+  81          
+  82          /************************* 显示函数 ***************************/
+  83          //void DisplayScan(unsigned char num,unsigned char place)
+  84          void DisplayScan(uint num,uint place)
+  85          {       
+*** WARNING C235 IN LINE 85 OF TRAFFIC_LIGHT.C: parameter 1: different types
+*** WARNING C235 IN LINE 85 OF TRAFFIC_LIGHT.C: parameter 2: different types
+  86   1              Send_595(tablewei[place-1]);                    //输出位码 
+  87   1              Send_595(tableduan[num]);               //输出段码
+  88   1      
+  89   1              P_HC595_RCLK = 1;                                       //锁存输出数据
+  90   1              P_HC595_RCLK = 0;       
+  91   1      //      delay(3);
+  92   1              
+  93   1      //      Send_595(0);                            //输出位码 输出0即8位全部选中
+  94   1      //      Send_595(0x00);         
+  95   1      //      P_HC595_RCLK = 1;                                       //锁存输出数据
+  96   1      //      P_HC595_RCLK = 0;                               
+  97   1      } 
+  98          void xianshi()
+  99               {
+ 100   1                 uint i=125;
+ 101   1                 while(i--)
+ 102   1             {
+ 103   2                         w=1;d=shi1;DisplayScan(d,w);delay(1);
+ 104   2                 w=2;d=ge1;DisplayScan(d,w);delay(1);
+ 105   2                 w=3;d=shi2;DisplayScan(d,w);delay(1);
+ 106   2                 w=4;d=ge2;DisplayScan(d,w);delay(1);
+ 107   2                 w=5;d=shi3;DisplayScan(d,w);delay(1);
+ 108   2                 w=6;d=ge3;DisplayScan(d,w);delay(1);
+ 109   2                 w=7;d=shi4;DisplayScan(d,w);delay(1);
+ 110   2                 w=8;d=ge4;DisplayScan(d,w);delay(1); 
+ 111   2                 }
+ 112   1           } 
+ 113          
+ 114          void zhengchang()
+ 115          {
+C51 COMPILER V9.00   TRAFFIC_LIGHT                                                         01/10/2018 09:28:52 PAGE 3   
+
+ 116   1              num1=63;num2=51 ;num3=27;num4=27;
+ 117   1              while(num3){
+ 118   2                      if(J==0){
+ 119   3                              Nred=0;Dred=0;Ngreen=1;Dyellow=1;Nyellow=1;Dgreen=1; 
+ 120   3                              Bred=0; Xred=0; Bgreen=1; Xyellow=1; Byellow=1; 
+ 121   3                              Xgreen=1;Kid=0;Rred=1;Rgreen=0;delay(10000);}
+ 122   2                  else{
+ 123   3                              Nyellow=1;Nred=1;Ngreen=0;Dyellow=1;Dred=0;Dgreen=1; 
+ 124   3                              Byellow=1; Bred=1; Bgreen=0; Xyellow=1; Xred=0; 
+ 125   3                              Xgreen=1;Kid=1;Rred=0;Rgreen=1;
+ 126   3                       ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
+ 127   3                       ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
+ 128   3                       xianshi();num1--;num2--;       num3--;num4--;  
+ 129   3             }
+ 130   2           } //状态1
+ 131   1      
+ 132   1              num1=36;num2=24 ;num3=3;num4=3;
+ 133   1              while(num3)
+ 134   1                   {if(J==0)
+ 135   2                         {Nred=0;Dred=0;Ngreen=1;Dyellow=1;Nyellow=1;Dgreen=1; 
+ 136   3                              Bred=0; Xred=0; Bgreen=1; Xyellow=1; Byellow=1; 
+ 137   3                              Xgreen=1;Kid=0;Rred=1;Rgreen=0;delay(10000);}
+ 138   2                        else
+ 139   2                         {Nyellow=0;Nred=1;Ngreen=1;Dyellow=1;Dred=0;Dgreen=1; 
+ 140   3                              Byellow=0; Bred=1; Bgreen=1; Xyellow=1; Xred=0; 
+ 141   3                              Xgreen=1;Kid=1;Rred=0;Rgreen=1;
+ 142   3                       ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
+ 143   3                       ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
+ 144   3                       xianshi();num1--;num2--;       num3--;num4--;  
+ 145   3                     }
+ 146   2                   } //状态2
+ 147   1      
+ 148   1              num1=33;num2=21 ;num3=89;num4=89;
+ 149   1               while(num2)
+ 150   1                   {if(J==0)
+ 151   2                         {Nred=0;Dred=0;Ngreen=1;Dyellow=1;Nyellow=1;Dgreen=1; 
+ 152   3                              Bred=0; Xred=0; Bgreen=1; Xyellow=1; Byellow=1; 
+ 153   3                              Xgreen=1;Kid=0;Rred=1;Rgreen=0;delay(10000);}
+ 154   2                        else
+ 155   2                         {Nyellow=1;Nred=0;Ngreen=1;Dyellow=1;Dred=0;Dgreen=1; 
+ 156   3                              Byellow=1; Bred=0; Bgreen=1; Xyellow=1; Xred=0; 
+ 157   3                              Xgreen=1;Kid=1;Rred=1;Rgreen=0;
+ 158   3                       ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
+ 159   3                       ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
+ 160   3                       xianshi();num1--;num2--;       num3--;num4--;  
+ 161   3                     }
+ 162   2                   } //状态3
+ 163   1      
+ 164   1              num1=12;num2=65 ;num3=68;num4=68;
+ 165   1              while(num1)
+ 166   1                   {if(J==0)
+ 167   2                         {Nred=0;Dred=0;Ngreen=1;Dyellow=1;Nyellow=1;Dgreen=1; 
+ 168   3                              Bred=0; Xred=0; Bgreen=1; Xyellow=1; Byellow=1; 
+ 169   3                              Xgreen=1;Kid=0;Rred=1;Rgreen=0;delay(10000);}
+ 170   2                        else
+ 171   2                         {Nyellow=1;Nred=0;Ngreen=1;Dyellow=1;Dred=0;Dgreen=1; 
+ 172   3                              Byellow=1; Bred=0; Bgreen=1; Xyellow=1; Xred=1; 
+ 173   3                              Xgreen=0;Kid=1;Rred=0;Rgreen=1;
+ 174   3                       ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
+ 175   3                       ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
+ 176   3                       xianshi();num1--;num2--;       num3--;num4--;  
+ 177   3                     }
+C51 COMPILER V9.00   TRAFFIC_LIGHT                                                         01/10/2018 09:28:52 PAGE 4   
+
+ 178   2                   } //状态4
+ 179   1      
+ 180   1              num1=53;num2=53 ;num3=56;num4=56;
+ 181   1              while(num1)
+ 182   1                   {if(J==0)
+ 183   2                         {Nred=0;Dred=0;Ngreen=1;Dyellow=1;Nyellow=1;Dgreen=1; 
+ 184   3                              Bred=0; Xred=0; Bgreen=1; Xyellow=1; Byellow=1; 
+ 185   3                              Xgreen=1;Kid=0;Rred=1;Rgreen=0;delay(10000);}
+ 186   2                        else
+ 187   2                         {Nyellow=1;Nred=0;Ngreen=1;Dyellow=1;Dred=1;Dgreen=0; 
+ 188   3                              Byellow=1; Bred=0; Bgreen=1; Xyellow=1; Xred=1; 
+ 189   3                              Xgreen=0;Kid=1;Rred=0;Rgreen=1;
+ 190   3                       ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
+ 191   3                       ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
+ 192   3                       xianshi();num1--;num2--;       num3--;num4--;  
+ 193   3                     }
+ 194   2                   } //状态5
+ 195   1              num1=3;num2=3 ;num3=3;num4=3;
+ 196   1              while(num1)
+ 197   1                   {if(J==0)
+ 198   2                         {Nred=0;Dred=0;Ngreen=1;Dyellow=1;Nyellow=1;Dgreen=1; 
+ 199   3                              Bred=0; Xred=0; Bgreen=1; Xyellow=1; Byellow=1; 
+ 200   3                              Xgreen=1;Kid=0;Rred=1;Rgreen=0;delay(10000);}
+ 201   2                        else
+ 202   2                         {Nyellow=1;Nred=0;Ngreen=1;Dyellow=0;Dred=1;Dgreen=1; 
+ 203   3                              Byellow=1; Bred=0; Bgreen=1; Xyellow=0; Xred=1; 
+ 204   3                              Xgreen=1;Kid=1;Rred=0;Rgreen=1;
+ 205   3                       ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
+ 206   3                       ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
+ 207   3                       xianshi();num1--;num2--;       num3--;num4--;  
+ 208   3                               }
+ 209   2                   } //状态6
+ 210   1      }
+ 211                  
+ 212           /************ 向HC595发送一个字节函数 **************/
+ 213          void Send_595(unsigned char dat)
+ 214          {               
+ 215   1              unsigned char   i;
+ 216   1              P_HC595_OE = 0;           //hc595输出使能
+ 217   1              for(i=0; i<8; i++)
+ 218   1              {
+ 219   2                      if(dat & 0x80)
+ 220   2                      {
+ 221   3                              P_HC595_SER   = 1;
+ 222   3                      }
+ 223   2                      else
+ 224   2                      {
+ 225   3                              P_HC595_SER   = 0;
+ 226   3                      }               
+ 227   2                      P_HC595_SRCLK = 1;
+ 228   2                      P_HC595_SRCLK = 0;
+ 229   2                      dat <<= 1;
+ 230   2                      
+ 231   2              }
+ 232   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1073    ----
+   CONSTANT SIZE    =     24    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+C51 COMPILER V9.00   TRAFFIC_LIGHT                                                         01/10/2018 09:28:52 PAGE 5   
+
+   DATA SIZE        =     28       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)
