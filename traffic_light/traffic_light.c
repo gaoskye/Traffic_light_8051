@@ -41,33 +41,17 @@ unsigned char code tablewei[]={
 };	   //位码
 
 /*****************************配置数码管完成****************/
-void delay(uint z)	  //延时	  原本delay(8000)输出大概1s
+void delay(uint z)	  //延时	  
 {
 	uint x,y;
 	for(x=z;x>0;x--)
-		//for(y=110;y>0;y--);
 		for(y=800;y>0;y--);
 }
 void Send_595(unsigned char dat);
 void DisplayScan(unsigned char num,wei);
-void xianshi();		  //显示
-void zhengchang();	  //正常
+void display();		  //显示
+void work();	  //工作
 /***************************主函数******************************/
-/*void main()
-{
-	while(1)
-	{
-		uchar i	; 
-		 num1=88;num2=77;num3=66;num4=55;
-		for(i=38;i>0;i--){
-		ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
-         ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
-		 xianshi();	
-		 num1--;num2--; num3--;num4--;
-		 }
-	}
-	
-} */
 void main()
 {
 	while(1)
@@ -75,27 +59,20 @@ void main()
 		if(J==0){
 			Nred=0;Dred=0; Bred=0; Xred=0; Kid=0;delay(10000);}
 	    else{
-			zhengchang();}
+			work();}
 	}
 }
 
 /************************* 显示函数 ***************************/
-//void DisplayScan(unsigned char num,unsigned char place)
 void DisplayScan(uint num,uint place)
 {	
 	Send_595(tablewei[place-1]);			//输出位码 
 	Send_595(tableduan[num]);	        //输出段码
 
 	P_HC595_RCLK = 1;					//锁存输出数据
-	P_HC595_RCLK = 0;	
-//	delay(3);
-	
-//	Send_595(0);				//输出位码 输出0即8位全部选中
-//	Send_595(0x00);		
-//	P_HC595_RCLK = 1;					//锁存输出数据
-//	P_HC595_RCLK = 0;				
+	P_HC595_RCLK = 0;					
 } 
-void xianshi()
+void display()
      {
 	   uint i=125;
 	   while(i--)
@@ -110,8 +87,8 @@ void xianshi()
            w=8;d=ge4;DisplayScan(d,w);delay(1); 
 	   }
      } 
-
-void zhengchang()
+/************************* 工作流程函数 ***************************/
+void work()
 {
 	num1=63;num2=51 ;num3=27;num4=27;
 	while(num3){
@@ -125,7 +102,7 @@ void zhengchang()
 			Xgreen=1;Kid=1;Rred=0;Rgreen=1;
 	         ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
 	         ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
-	         xianshi();num1--;num2--; 	num3--;num4--;	
+	         display();num1--;num2--; 	num3--;num4--;	
        }
      } //状态1
 
@@ -141,7 +118,7 @@ void zhengchang()
 			Xgreen=1;Kid=1;Rred=0;Rgreen=1;
 	         ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
 	         ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
-	         xianshi();num1--;num2--; 	num3--;num4--;	
+	        display();num1--;num2--; 	num3--;num4--;	
 	       }
 	     } //状态2
 
@@ -157,7 +134,7 @@ void zhengchang()
 			Xgreen=1;Kid=1;Rred=1;Rgreen=0;
 	         ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
 	         ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
-	         xianshi();num1--;num2--; 	num3--;num4--;	
+	         display();num1--;num2--; 	num3--;num4--;	
 	       }
 	     } //状态3
 
@@ -173,7 +150,7 @@ void zhengchang()
 			Xgreen=0;Kid=1;Rred=0;Rgreen=1;
 	         ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
 	         ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
-	         xianshi();num1--;num2--; 	num3--;num4--;	
+	        display();num1--;num2--; 	num3--;num4--;	
 	       }
 	     } //状态4
 
@@ -189,7 +166,7 @@ void zhengchang()
 			Xgreen=0;Kid=1;Rred=0;Rgreen=1;
 	         ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
 	         ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
-	         xianshi();num1--;num2--; 	num3--;num4--;	
+	         display();num1--;num2--; 	num3--;num4--;	
 	       }
 	     } //状态5
 	num1=3;num2=3 ;num3=3;num4=3;
@@ -204,7 +181,7 @@ void zhengchang()
 			Xgreen=1;Kid=1;Rred=0;Rgreen=1;
 	         ge1=num1%10;shi1=num1/10;ge2=num2%10;shi2=num2/10;
 	         ge3=num3%10;shi3=num3/10;ge4=num4%10;shi4=num4/10;
-	         xianshi();num1--;num2--; 	num3--;num4--;	
+	         display();num1--;num2--; 	num3--;num4--;	
 			 }
 	     } //状态6
 }
@@ -212,7 +189,7 @@ void zhengchang()
  /************ 向HC595发送一个字节函数 **************/
 void Send_595(unsigned char dat)
 {		
-	unsigned char	i;
+	unsigned char i;
 	P_HC595_OE = 0;           //hc595输出使能
 	for(i=0; i<8; i++)
 	{
